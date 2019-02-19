@@ -2,7 +2,7 @@
 
 # Initialize a mongo data folder and logfile
 mkdir -p /data/db
-rm /var/log/mongodb.log
+rm -f /var/log/mongodb.log
 touch /var/log/mongodb.log
 chmod 777 /var/log/mongodb.log
 

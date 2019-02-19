@@ -1,0 +1,80 @@
+######################################################################
+# Copyright (c) 2017-2018 UNPARALLEL innovation Lda, and Castalia Solution
+#
+# This program and the accompanying materials are made
+# available under the terms of the Eclipse Public License 2.0
+# which is available at https://www.eclipse.org/legal/epl-2.0/
+#
+# SPDX-License-Identifier: EPL-2.0
+######################################################################
+
+#
+# Note:
+#
+# docker-compose file tweaked for local development.
+# Doesn't import DB dumbs and uses a local build of the metric-platform
+# rather than the CI's lastSuccessfulBuild
+#
+
+version: "3"
+services:
+    admin-webapp:
+        build: ./web-admin
+        environment:
+            - API_GATEWAY_VAR=http://localhost:8086
+        depends_on:
+            - api-server
+        networks:
+            - default
+        expose:
+            - 80
+        ports:
+            - "5601:80"
+
+    oss-app:
+        build: ./dev/metric-platform-dev
+        user: root
+        entrypoint: ["./wait-for-it.sh", "oss-db:27017", "-t", "0", "--", "./eclipse", "-master", "-apiServer", "-worker", "w1", "-ossmeterConfig", "prop.properties"]
+        depends_on:
+            - oss-db
+        networks:
+            - default
+        expose:
+            - 8182
+            - 8183
+        ports:
+          - "8182:8182"
+
+    oss-db:
+        build: ./dev/oss-db-dev
+        networks:
+            - default
+        expose:
+            - 27017
+        ports:
+            - "27017:27017"
+
+    api-server:
+        build: ./api-gw
+        depends_on:
+            - oss-app
+            - auth-server
+        networks:
+            - default
+        expose:
+            - 8086
+        ports:
+            - "8086:8086"
+
+    auth-server:
+        build: ./auth
+        entrypoint: ["./wait-for-it.sh", "oss-db:27017", "-t", "0", "--", "java", "-jar", "scava-auth-service-1.0.0.jar" ]
+        depends_on:
+            - oss-db
+        networks:
+            - default
+        expose:
+            - 8085
+        ports:
+            - "8085:8085"
+
