@@ -65,15 +65,15 @@ services:
         ports:
           - "8182:8182"
 
-#     oss-slave: # Service containing OSSMETER slaves instances
-#         build: ./metric-platform
-#         entrypoint: ./eclipse -worker w1  -ossmeterConfig prop.properties
+    oss-slave: # Service containing OSSMETER slaves instances
+        build: ./metric-platform
+        entrypoint: ["./wait-for-it.sh", "oss-db:27017", "-t", "0", "--", "./eclipse", "-worker", "w2", "-config", "prop.properties"]
 # # #        entrypoint: ["./wait-for-it.sh", "oss-db:27017", "-t", "100", "--", "./eclipse", "-slave", "-config", "prop.properties"]
-#         depends_on:
-#          - oss-db
-#          - oss-app
-#         networks:
-#          - default
+        depends_on:
+          - oss-db
+          - oss-app
+        networks:
+          - default
  # NOTE: To scale up the number of slaves in OSSMETER application using docker composer use:
  #                  docker-compose scale oss-slave=X
  #       where 'X' corresponds to the total number of slaves wanted in the application
@@ -81,8 +81,8 @@ services:
  # Each slave instance consumes a great amount of processing and memory resources.
  # Deployment of multiple instances may harm the system performance
     oss-db: # data storage service
-        build: ./oss-db #restores a dump of of the Knowledge Base
-    #    image: mongo:3.4 #current setup uses mongodb
+        #build: ./oss-db #restores a dump of of the Knowledge Base
+        image: mongo:3.4 #current setup uses mongodb
         networks:
             - default
         expose:  #exposes database port to oss-web and oss-app
